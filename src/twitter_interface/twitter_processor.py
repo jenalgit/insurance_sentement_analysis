@@ -14,6 +14,7 @@ import plotly.graph_objs as go
 
 # sending requests
 import requests
+import json
 
 # global hook to twitter
 auth_handle = tweepy.OAuthHandler(auth.consumer_key, auth.consumer_secret)
@@ -28,7 +29,7 @@ def get_tweets(handle_list, tweet_count):
     """
     results = {}
     for handle in handle_list:
-        results[handle] = [item.text for item in api.search(to=handle, count=tweet_count)]
+        results[handle] = ["\"" + item.text + "\"" for item in api.search(to=handle, count=tweet_count)]
     return results
 
 def store_scores(scores):
@@ -67,7 +68,7 @@ def classify_bulk_tweets(tweet_dict):
         tweets = tweet_dict[key]
 
         # format our json message
-        tweet_list = [{"text":item} for item in tweets]
+        tweet_list = [{"text": item} for item in tweets]
         json_data = {"tweets":tweet_list}
         # send request
         r = requests.post("http://127.0.0.1:7000/api", json=json_data)
@@ -107,7 +108,7 @@ def runLoop():
     # graph scores
     update_graph(scores_df)
 
-def __main__():
+def main():
 
     while True:
         try:
@@ -118,5 +119,5 @@ def __main__():
             return
 
 
-
+if __name__ == "__main__": main()
 

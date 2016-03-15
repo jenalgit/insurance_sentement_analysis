@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 from flask import Flask, abort, jsonify, request
 from sklearn.externals import joblib
 import re
@@ -23,30 +24,45 @@ app = Flask(__name__)
 def make_predict():
     """
      JSON should look like this
-    {"tweets" :[
+
+    [{"company1" :[
     {"text":"best company ever"},
     {"text":"this company sucks"},
-    {"text":"you guys are great"}
-    ]}
+    {"text":"you guys are great"}],
+    {"company2" :[
+    {"text":"best company ever"},
+    {"text":"this company sucks"},
+    {"text":"you guys are great"}]
+    ]
     """
 
-    # get data, xform to a pandas series
+    # get data, xform to a dict of  pandas series
     data = request.get_json(force=True)
-    tweets = pd.Series( [item["text"] for item in data['tweets'] ])
+    company_dict = {}
+    results_dict = {}
+    for key in data.keys():
+        company_dict[key] = pd.Series([item["text"] for item in data[key] ])
 
     # make score predictions
-    tweets = tweets.map(clean_tweets)
-    X = vectorizer.transform(tweets)
-    results = clf.predict_proba(X)[:,1]
+    for key in company_dict.keys():
 
-    # create JSON of results
-    tweet_index = range(1, len(results)+1)
-    scores = dict(zip(tweet_index, results))
+        try:
+            company_dict[key] = company_dict[key].map(clean_tweets)
+            X = vectorizer.transform(company_dict[key])
+            results = clf.predict_proba(X)[:, 1]
+        except:
+            print("Unexpected error:", sys.exc_info()[0])
+            results = np.zeros(len(company_dict[key]))
+
+        # create JSON of results
+        tweet_index = range(1, len(results)+1)
+        scores = dict(zip(tweet_index, results))
+        results_dict[key] = scores
 
     # return the json
-    return jsonify(results=scores)
+    return jsonify(results=results_dict)
     
 if __name__ == '__main__':
-    app.run(port=7000, debug=True)
+    app.run(port=7000, host='0.0.0.0', debug=True)
     
     

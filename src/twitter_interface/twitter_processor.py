@@ -72,7 +72,7 @@ def classify_bulk_tweets(tweet_dict):
         tweet_list = [{"text": item} for item in tweets]
         json_request[key] = tweet_list
     # send request
-    r = requests.post("http://127.0.0.1:7000/api", json=json_request)
+    r = requests.post("http://www.gallium.ai:7000/api", json=json_request)
     classifier_results = r.json()
     # compute the mean value
     for key in classifier_results['results'].keys():
